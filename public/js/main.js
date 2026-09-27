@@ -241,11 +241,10 @@ const exportButton = nav.querySelector("#export");
     exportButton.addEventListener("click", async () => {
         loadingScreenAndDraw(lastDrawnImage, images, true, () => {
             let downloadLink = document.createElement('a');
+            downloadLink.setAttribute("target", "_blank")
             downloadLink.setAttribute('download', 'mosaic.png');
+            downloadLink.setAttribute('href', canvas.toDataURL('image/png'));
 
-            let dataURL = canvas.toDataURL('image/png');
-            let url = dataURL.replace(/^data:image\/png/,'data:application/octet-stream');
-            downloadLink.setAttribute('href', url);
             downloadLink.click();
         });
     })
