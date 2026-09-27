@@ -105,9 +105,9 @@ function tagWithPalette(images) {
 const canvas = document.querySelector(".output");
 const ctx = canvas.getContext("2d");
 
-const [TILE_WIDTH, TILE_HEIGHT] = [16, 16];
-const [INPUT_WIDTH, INPUT_HEIGHT] = [64, 64]
-const [OUTPUT_WIDTH, OUTPUT_HEIGHT] = [INPUT_WIDTH * TILE_WIDTH, INPUT_HEIGHT * TILE_HEIGHT]
+let tileSize = 16;
+const DOWNSCALE_SIZE = 64;
+
 function findClosestImage(h, s, l, palette) {
     let closestDistance = Infinity;
     let closestImage = null;
@@ -124,15 +124,27 @@ function findClosestImage(h, s, l, palette) {
     return closestImage;
 }
 
+function normalize(width, height) {
+    if (width > height) {
+        return [DOWNSCALE_SIZE, Math.floor((height / width) * DOWNSCALE_SIZE)];
+    } else {
+        return [Math.floor((width / height) * DOWNSCALE_SIZE), DOWNSCALE_SIZE];
+    }
+}
+
 function drawPaletted(inImage, palette) {
-    const sourceCanvas = new OffscreenCanvas(INPUT_WIDTH, INPUT_HEIGHT);
+    let [inWidth, inHeight] = normalize(inImage.width, inImage.height);
+    let [outWidth, outHeight] = [inWidth * tileSize, inHeight * tileSize];
+
+    const sourceCanvas = new OffscreenCanvas(inWidth, inHeight);
     const sourceCtx = sourceCanvas.getContext("2d");
-    sourceCtx.drawImage(inImage, 0, 0, INPUT_WIDTH, INPUT_HEIGHT);
+    sourceCtx.drawImage(inImage, 0, 0, inWidth, inHeight);
+
     const sourceData = sourceCtx.getImageData(0, 0, sourceCanvas.width, sourceCanvas.height);
     const pixelData = sourceData.data;
 
-    canvas.width = OUTPUT_WIDTH;
-    canvas.height = OUTPUT_HEIGHT;
+    canvas.width = outWidth;
+    canvas.height = outHeight;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     for (let i = 0; i < pixelData.length; i += 4) {
         const [r, g, b] = [pixelData[i], pixelData[i + 1], pixelData[i + 2]]
@@ -140,24 +152,90 @@ function drawPaletted(inImage, palette) {
         let image = findClosestImage(h, s, l, palette);
 
         let pixelI = i / 4;
-        let y = Math.floor(pixelI / INPUT_WIDTH);
-        let x = pixelI % INPUT_WIDTH;
+        let y = Math.floor(pixelI / inWidth);
+        let x = pixelI % inWidth;
 
-        let ox = x * TILE_WIDTH;
-        let oy = y * TILE_HEIGHT;
+        let ox = x * tileSize;
+        let oy = y * tileSize;
 
-        console.log(ox, oy)
-        ctx.drawImage(image, ox, oy, TILE_WIDTH, TILE_HEIGHT);
+        ctx.drawImage(image, ox, oy, tileSize, tileSize);
     }
 }
 
-(async function() {
-    let images = await collectImages("medium_term");
-    let inImage = await fetchImage("/img/test.jpg");
+const loader = document.querySelector(".loader");
+const loaderMessage = loader.querySelector(".message");
 
-    document.title = "Tagging palette";
+function setLoadingMessage(message) {
+    loaderMessage.innerText = message;
+}
+
+let lastDrawnImage = null;
+function loadingScreenAndDraw(inImage, palette, highRes = false, onFinished = () => {}) {
+    setLoadingMessage("Generating image...")
+    startLoading();
+
+    tileSize = highRes ? 64 : 16;
+
+    lastDrawnImage = inImage;
+    setTimeout(() => {
+        drawPaletted(inImage, palette)
+        endLoading()
+        onFinished()
+    }, 1000);
+}
+
+function startLoading() {
+    loader.classList.remove("done-loading");
+}
+
+function endLoading() {
+    loader.classList.add("done-loading");
+}
+
+const nav = document.querySelector("nav");
+const fileInput = nav.querySelector("input");
+const exportButton = nav.querySelector("#export");
+(async function() {
+    setLoadingMessage("Fetching user data...");
+    let images = await collectImages("medium_term");
+
+    setLoadingMessage("Fetching examples...");
+    let example = null;
+    for (let button of nav.children) {
+        if (!(button.dataset.image)) continue;
+
+        let url = button.dataset.image;
+        let image = await fetchImage(url);
+        if (!example) example = image;
+        button.addEventListener("click", async () => {
+            loadingScreenAndDraw(image, images);
+        })
+    }
+
+    fileInput.addEventListener("change", () => {
+        if (fileInput.files.length === 1) {
+            const img = new Image();
+            img.onload = () => {
+                loadingScreenAndDraw(img, images)
+            }
+            img.src = window.URL.createObjectURL(fileInput.files[0]);
+        }
+    });
+
+    exportButton.addEventListener("click", async () => {
+        loadingScreenAndDraw(lastDrawnImage, images, true, () => {
+            let downloadLink = document.createElement('a');
+            downloadLink.setAttribute('download', 'mosaic.png');
+
+            let dataURL = canvas.toDataURL('image/png');
+            let url = dataURL.replace(/^data:image\/png/,'data:application/octet-stream');
+            downloadLink.setAttribute('href', url);
+            downloadLink.click();
+        });
+    })
+
+    setLoadingMessage("Generating palette...");
     tagWithPalette(images);
 
-    document.title = "Drawing with palette";
-    drawPaletted(inImage, images);
+    loadingScreenAndDraw(example, images);
 })();

@@ -1,10 +1,112 @@
+@import url('https://fonts.googleapis.com/css2?family=Pinyon+Script&display=swap');
+
 body {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
+
+  background-image: url("/img/pt_white.png");
+  background-repeat: repeat;
 }
 
 span {
   display: block;
+}
+
+.loader {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+
+  position: fixed;
+  top: 0;
+  left: 0;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background-image: url("/img/curtain.png");
+  opacity: 100%;
+
+  transition: top 1s;
+  pointer-events: none;
+
+  z-index: 1000;
+}
+
+.loader .message {
+  background-image: url("/img/wood.jpg");
+  font-size: 2rem;
+  padding: 16px;
+
+  color: #362212;
+  text-shadow: 1px 1px 1px black;
+  box-shadow: 5px 5px 5px black;
+
+  font-family: "Pinyon Script", cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.done-loading {
+  top: -100%;
+}
+
+main {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  display: flex;
+  flex-direction: column;
+
+  padding: 8px;
+}
+
+.output {
+  width: calc(min(60vw, 60vh) - 4rem);
+  height: auto;
+
+  border: 4rem solid white;
+  outline: 0.5rem solid black;
+  outline-offset: -0.5rem;
+}
+
+@media (max-width: 481px) {
+  .output {
+    width: min(90vw, 90vh);
+    border: none;
+  }
+}
+
+nav {
+  display: inline-block;
+  margin-top: 8px;
+  width: 100%;
+}
+
+nav label, nav #export {
+  float: right;
+}
+
+input[type="file"] {
+  display: none;
+}
+
+nav button.example, nav label {
+  margin-right: 4px;
+}
+
+nav button, nav label {
+  border: none;
+  padding: 4px;
+  background: black;
+  color: white;
+
+  font-size: 1.25rem;
+
+  cursor: pointer;
 }

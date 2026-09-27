@@ -6,6 +6,7 @@
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
     <link rel="stylesheet" href="/css/style.css">
 
     <script src="/js/main.js" defer></script>
@@ -13,8 +14,24 @@
     <title>Anacrusis</title>
 </head>
 <body>
-    <canvas class="output"></canvas>
+    <div class="loader">
+        <span class="message">Loading...</span>
+    </div>
+    <main>
+        <canvas class="output"></canvas>
+        <nav>
+            <button class="example material-symbols-outlined" id="mona-lisa" data-image="/img/mona_lisa.webp">woman</button>
+            <button class="example material-symbols-outlined" id="starry-night" data-image="/img/starry_night.webp">moon_stars</button>
+            <button class="example material-symbols-outlined" id="rebecca" data-image="/img/rebecca.jpg">pets</button>
 
-    <a href="/spotify/logout">refresh</a>
+            <button id="export" class="material-symbols-outlined">download</button>
+
+            <label for="uploaded" class="material-symbols-outlined">
+                image_arrow_up
+            </label>
+            <input type="file" name="uploaded" id="uploaded" accept="image/*">
+        </nav>
+    </main>
+
 </body>
 </html>
