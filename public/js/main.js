@@ -240,12 +240,13 @@ const exportButton = nav.querySelector("#export");
 
     exportButton.addEventListener("click", async () => {
         loadingScreenAndDraw(lastDrawnImage, images, true, () => {
-            let downloadLink = document.createElement('a');
-            downloadLink.setAttribute("target", "_blank")
-            downloadLink.setAttribute('download', 'mosaic.png');
-            downloadLink.setAttribute('href', canvas.toDataURL('image/png'));
-
-            downloadLink.click();
+            canvas.toBlob((blob) => {
+                let downloadLink = document.createElement('a');
+                downloadLink.href = URL.createObjectURL(blob);
+                downloadLink.download = "mosaic.png";
+                downloadLink.click();
+                URL.revokeObjectURL(downloadLink.href);
+            })
         });
     })
 
